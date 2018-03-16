@@ -34,41 +34,42 @@ class ModelTest < Minitest::Test
     assert_search "product", ["product a", "product b", "product c"]
   end
 
-  def test_disable_callbacks_model_with_async_callbacks
+  def test_model_with_async_callbacks
     store_names ["animal a"], Animal
 
     Animal.reindex
 
-    assert_search "animal", ["animal a"]
+    assert_search "animal", ["animal a"], {}, Animal
 
     Searchkick.callbacks(false) do
       store_names ["animal b"], Animal
     end
-    assert_search "animal", ["animal a"]
+    assert_search "animal", ["animal a"], {}, Animal
 
-    Animal.reindex
+    Searchkick.callbacks(true) do
+      store_names ["animal c"], Animal
+    end
 
-    assert_search "animal", ["animal a", "animal b"]
+    assert_search "animal", ["animal a", "animal c"], {}, Animal
   end
-  
-  def test_disable_callbacks_global_async_callbacks
-    # make sure callbacks default to on
+
+  def test_global_async_callbacks
+  #   # make sure callbacks default to on
     assert Searchkick.callbacks?
 
     store_names ["animal a"], Animal
+    assert_search "animal", ["animal a"], {}, Animal
 
     Searchkick.disable_callbacks
     assert !Searchkick.callbacks?
 
     store_names ["animal b"]
-    assert_search "animal", ["animal a"]
+    assert_search "animal", ["animal a"], {}, Animal
 
-    Animal.reindex
 
     Searchkick.enable_callbacks
-    store_names ["animal c"]
-
-    assert_search "animal", ["animal a", "animal b", "animal c"]
+    Animal.first.update(name: "animal c")
+    assert_search "animal", ["animal a", "animal c"], {}, Animal
   end
 
   def test_multiple_models
