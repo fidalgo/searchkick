@@ -69,6 +69,7 @@ class ModelTest < Minitest::Test
 
     Searchkick.enable_callbacks
     Animal.first.update(name: "animal c")
+    Animal.search_index.refresh
     assert_search "animal", ["animal a", "animal c"], {}, Animal
   end
 
